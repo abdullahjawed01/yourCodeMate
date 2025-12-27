@@ -2,40 +2,56 @@ import CodingTest from "../models/CodingTest.js";
 import User from "../models/User.js";
 
 export const getAllTests = async (req, res) => {
-  const { user } = req;
-  const tests = await CodingTest.find({ unlockLevel: { $lte: user.level } });
-  res.status(200).json(tests);
+  try {
+    const { user } = req;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const tests = await CodingTest.find({ unlockLevel: { $lte: user.level } })
+      .sort({ unlockLevel: 1, difficulty: 1, createdAt: -1 })
+      .lean();
+    res.status(200).json(tests);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 
 export const submitSolution = async (req, res) => {
   try {
-    const { userId, testId } = req.body;
+    const { testId, code, language } = req.body;
+    const userId = req.user._id;
+
+    if (!testId || !code) {
+      return res.status(400).json({ message: "testId and code are required" });
+    }
 
     const user = await User.findById(userId);
     const test = await CodingTest.findById(testId);
 
-    if (!user || !test)
+    if (!user || !test) {
       return res.status(404).json({ message: "User or Test not found" });
+    }
 
-    //  Check level unlock
+    // Check level unlock
     if (user.level < test.unlockLevel) {
       return res.status(403).json({
         message: "Test locked. Increase your level.",
       });
     }
 
-   
-    if (user.solvedTests.includes(testId)) {
+    // Check if already solved
+    const testIdStr = testId.toString();
+    if (user.solvedTests.some(id => id.toString() === testIdStr)) {
       return res.status(400).json({
         message: "Test already solved",
       });
     }
 
-    // EASY scoring
+    // Basic scoring (AI evaluation should be done via /ai/submit)
     const score = 10;
     user.points += score;
-    user.level = Math.floor(user.points / 10) + 1;
+    user.level = Math.floor(user.points / 100) + 1;
 
     user.solvedTests.push(testId);
 
@@ -48,7 +64,13 @@ export const submitSolution = async (req, res) => {
     res.status(200).json({
       message: "Test submitted successfully",
       score,
-      user,
+      user: {
+        _id: user._id,
+        name: user.name,
+        points: user.points,
+        level: user.level,
+        badges: user.badges
+      },
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -17,19 +17,20 @@ export const getUserDashboard = async (req, res) => {
       });
     }
 
-    // 2️⃣ Get all tests
-    const tests = await CodingTest.find({});
+    // 2️⃣ Get all tests (optimized query)
+    const tests = await CodingTest.find({}).sort({ unlockLevel: 1, createdAt: 1 }).lean();
 
     // 3️⃣ Build dashboard tests
     const dashboardTests = tests.map((test, index) => {
-      const completed = progress.completedTests.includes(test._id);
+      const testIdStr = test._id.toString();
+      const completed = progress.completedTests.some(id => id.toString() === testIdStr);
 
       const unlocked =
         completed ||
         progress.level >= test.unlockLevel ||
         index === 0;
 
-      const hints = test.hints.slice(0, progress.level);
+      const hints = (test.hints || []).slice(0, progress.level);
 
       return {
         _id: test._id,
@@ -38,7 +39,12 @@ export const getUserDashboard = async (req, res) => {
         difficulty: test.difficulty,
         unlocked,
         completed,
-        hints
+        hints,
+        maxScore: test.maxScore,
+        unlockLevel: test.unlockLevel,
+        hintCost: test.hintCost,
+        tags: test.tags || [],
+        estimatedTime: test.estimatedTime || 30
       };
     });
 

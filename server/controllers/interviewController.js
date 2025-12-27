@@ -1,4 +1,4 @@
-import GroqAI from "../utils/groqClient.js"; // your Groq client wrapper
+import groq from "../utils/groqClient.js";
 import InterviewSession from "../models/InterviewSession.js";
 import Progress from "../models/Progress.js";
 import User from "../models/User.js";
@@ -20,7 +20,33 @@ export const startInterview = async (req, res) => {
     const prompt = `Generate a ${level} ${role} coding/interview question for a beginner/intermediate user. 
 Return only JSON: { "question": "question text here" }`;
 
-    const aiResponse = await GroqAI.ask(prompt);
+    // Use Groq API correctly
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: "You are an expert technical interviewer. Generate interview questions. Return ONLY VALID JSON." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
+    });
+
+    let aiResponse;
+    const content = completion.choices[0].message.content || "";
+
+    try {
+      aiResponse = JSON.parse(content);
+    } catch (parseError) {
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+         try {
+            aiResponse = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+         } catch(e) {}
+      }
+      
+      if (!aiResponse) {
+        aiResponse = { question: content || "Describe your experience with this technology." };
+      }
+    }
 
     const questionText = aiResponse.question || "Describe your experience with JS.";
 
@@ -36,7 +62,14 @@ Return only JSON: { "question": "question text here" }`;
     res.status(200).json({
       message: "Interview started",
       sessionId: session._id,
-      question: questionText
+      question: questionText,
+      session: {
+        _id: session._id,
+        role: session.role,
+        level: session.level,
+        questions: session.questions,
+        totalScore: 0
+      }
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -72,10 +105,46 @@ ${answer}
 Return ONLY JSON: { "score": number between 0-100, "feedback": "text" }
 `;
 
-    const aiResult = await GroqAI.ask(prompt);
+    // Use Groq API correctly
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: "You are an expert technical interviewer. Evaluate answers and provide scores and feedback. Return ONLY VALID JSON." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.3,
+    });
+
+    let aiResult;
+    const content = completion.choices[0].message.content || "";
+    
+    try {
+      // 1. Try direct parse
+      aiResult = JSON.parse(content);
+    } catch (parseError) {
+      // 2. Try to extract JSON from code blocks
+      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/\{[\s\S]*\}/);
+      
+      if (jsonMatch) {
+        try {
+          aiResult = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+        } catch (e) {
+          // Fallback below
+        }
+      }
+      
+      if (!aiResult) {
+         // Fallback manual extraction
+        const scoreMatch = content.match(/score["']?\s*:\s*(\d+)/i) || content.match(/\b(\d{1,3})\b/);
+        aiResult = {
+          score: scoreMatch ? parseInt(scoreMatch[1]) : 50,
+          feedback: content.replace(/```json/g, '').replace(/```/g, '').trim() || "Good attempt. Keep practicing!"
+        };
+      }
+    }
 
     // Parse AI result safely
-    const score = Number(aiResult.score) || 50; // default 50 if missing
+    const score = Math.min(Math.max(Number(aiResult.score) || 50, 0), 100); // Clamp between 0-100
     const feedback = aiResult.feedback || "Good attempt";
 
     // Update question in session

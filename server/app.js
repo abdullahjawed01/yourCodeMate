@@ -35,6 +35,9 @@ import adminTestRoutes from "./routes/adminTestRoutes.js";
 import interviewRoutes from "./routes/interviewRoutes.js"
 import hintRoutes from "./routes/hintRoutes.js"
 import adminRoutes from "./routes/adminTestRoutes.js"
+import routeRoutes from "./routes/routeRoutes.js"
+import pythonRoutes from "./routes/pythonRoutes.js"
+import javascriptRoutes from "./routes/javascriptRoutes.js"
 
 
 
@@ -79,6 +82,9 @@ app.use("/leaderboard", leaderboardRoutes);
 app.use("/interview", interviewRoutes);
 app.use("/hint", hintRoutes);
 app.use("/admin", adminRoutes);
+app.use("/routes", routeRoutes);
+app.use("/python", pythonRoutes);
+app.use("/javascript", javascriptRoutes);
 
 /// exit listen
 app.listen(PORT,()=>{

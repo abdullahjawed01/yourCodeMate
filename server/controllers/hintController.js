@@ -1,20 +1,32 @@
 // Controller: Get hint
 import Progress from "../models/Progress.js";
 import CodingTest from "../models/CodingTest.js";
-import groq from "../utils/groqClient.js"; // Keep import for future use
+import groq from "../utils/groqClient.js";
 
-// Helper function: generate AI hint
+// Helper function: generate AI hint using Groq
 const generateHintAI = async (test) => {
-  // If Groq AI is not working, return a fallback hint
   try {
-    // Example placeholder: replace with actual Groq query when available
-    // const response = await groq.query(`*[_type == "aiPrompt"]{hint}`);
-    // return response[0]?.hint || "Think about breaking the problem into smaller steps.";
+    const prompt = `Generate a helpful hint for this coding problem without giving away the solution:
 
-    // For now, mock hint
-    return "💡 Hint: Try breaking the problem into smaller steps.";
+Title: ${test.title}
+Description: ${test.description}
+
+Provide a hint that guides the user toward the solution. Keep it concise (1-2 sentences).`;
+
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: "You are a helpful coding mentor. Provide hints that guide without giving away solutions." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.5,
+    });
+
+    const hint = completion.choices[0].message.content || "💡 Hint: Try breaking the problem into smaller steps.";
+    return hint.startsWith("💡") ? hint : `💡 Hint: ${hint}`;
   } catch (err) {
     console.error("Groq request failed:", err.message);
+    // Fallback hint
     return "💡 Hint: Try breaking the problem into smaller steps.";
   }
 };

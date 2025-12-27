@@ -29,3 +29,6 @@ dist-ssr
 .env.production
 
 
+.env
+node_modules
+

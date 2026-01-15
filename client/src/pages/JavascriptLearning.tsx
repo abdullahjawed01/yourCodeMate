@@ -51,7 +51,7 @@ const JavascriptLearning: React.FC = () => {
     return (
         <div className="space-y-8 pb-12">
             {/* Hero Section */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 text-zinc-950 p-8 lg:p-12 shadow-2xl">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-900 via-zinc-900 to-black text-white p-8 lg:p-12 shadow-2xl">
                 <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
                     <Code2 size={240} />
                 </div>
@@ -60,36 +60,36 @@ const JavascriptLearning: React.FC = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                     >
-                        <div className="flex items-center gap-2 text-zinc-900 font-bold mb-4 bg-white/20 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
+                        <div className="flex items-center gap-2 text-primary-400 font-bold mb-4 bg-white/5 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/10">
                             <Trophy size={18} />
                             <span>Web Development Track</span>
                         </div>
                         <h1 className="text-4xl lg:text-5xl font-bold mb-4 tracking-tight">
                             Master JavaScript
                         </h1>
-                        <p className="text-zinc-900/80 text-lg mb-8 leading-relaxed font-medium">
+                        <p className="text-zinc-300 text-lg mb-8 leading-relaxed">
                             The language of the web. Learn modern ES6+, DOM manipulation, and asynchronous programming.
                         </p>
 
                         <div className="flex flex-wrap gap-6">
-                            <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm">
-                                <div className="p-2 bg-zinc-900/10 rounded-lg">
-                                    <Zap className="w-5 h-5 text-zinc-900" />
+                            <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10">
+                                <div className="p-2 bg-white/10 rounded-lg">
+                                    <Zap className="w-5 h-5 text-yellow-400" />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold">{progress.totalPoints}</div>
-                                    <div className="text-xs text-zinc-800 font-semibold opacity-70">Total Points</div>
+                                    <div className="text-xs text-zinc-400 font-medium">Total Points</div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl backdrop-blur-sm">
-                                <div className="p-2 bg-zinc-900/10 rounded-lg">
-                                    <CheckCircle2 className="w-5 h-5 text-zinc-900" />
+                            <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl backdrop-blur-sm border border-white/10">
+                                <div className="p-2 bg-white/10 rounded-lg">
+                                    <CheckCircle2 className="w-5 h-5 text-green-400" />
                                 </div>
                                 <div>
                                     <div className="text-2xl font-bold">
                                         {topics.filter((t: any) => t.completed).length}/{topics.length}
                                     </div>
-                                    <div className="text-xs text-zinc-800 font-semibold opacity-70">Topics Completed</div>
+                                    <div className="text-xs text-zinc-400 font-medium">Topics Completed</div>
                                 </div>
                             </div>
                         </div>

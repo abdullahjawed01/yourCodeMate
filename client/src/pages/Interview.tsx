@@ -60,7 +60,7 @@ const Interview: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="w-full space-y-8">
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">AI Technical Interview</h1>
@@ -77,7 +77,7 @@ const Interview: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-card border border-border rounded-2xl p-8 shadow-sm max-w-xl mx-auto"
+            className="bg-card glass-card rounded-2xl p-8 shadow-xl w-full backdrop-blur-md"
           >
             <div className="space-y-6">
               <div>
@@ -88,10 +88,10 @@ const Interview: React.FC = () => {
                       key={role}
                       onClick={() => setConfig({ ...config, role })}
                       className={clsx(
-                        "p-3 rounded-lg border text-sm font-medium capitalize transition-all",
+                        "p-3 rounded-lg border text-sm font-medium capitalize transition-all duration-200 hover:scale-105 active:scale-95",
                         config.role === role
-                          ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                          : "border-border hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                          ? "border-primary bg-primary/10 text-primary ring-2 ring-primary shadow-lg shadow-primary/10"
+                          : "border-border hover:bg-muted bg-background/50"
                       )}
                     >
                       {role}
@@ -108,10 +108,10 @@ const Interview: React.FC = () => {
                       key={level}
                       onClick={() => setConfig({ ...config, level })}
                       className={clsx(
-                        "p-3 rounded-lg border text-sm font-medium capitalize transition-all",
+                        "p-3 rounded-lg border text-sm font-medium capitalize transition-all duration-200 hover:scale-105 active:scale-95",
                         config.level === level
-                          ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-                          : "border-border hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                          ? "border-primary bg-primary/10 text-primary ring-2 ring-primary shadow-lg shadow-primary/10"
+                          : "border-border hover:bg-muted bg-background/50"
                       )}
                     >
                       {level}
@@ -142,10 +142,10 @@ const Interview: React.FC = () => {
           >
             {/* AI Question Bubble */}
             <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Briefcase className="text-primary w-5 h-5" />
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center shrink-0 shadow-lg text-white ring-4 ring-background">
+                <Briefcase className="w-6 h-6" />
               </div>
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl rounded-tl-none shadow-sm flex-1">
+              <div className="bg-card/80 backdrop-blur-md border border-border/60 p-6 rounded-2xl rounded-tl-none shadow-sm flex-1 glass-card">
                 <h3 className="text-sm font-bold text-zinc-400 mb-2 uppercase tracking-wider">Interviewer</h3>
                 <div className="prose dark:prose-invert max-w-none text-lg">
                   {session?.questions?.[0]?.question || session?.question}
@@ -154,7 +154,7 @@ const Interview: React.FC = () => {
             </div>
 
             {/* Answer Box */}
-            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-xl glass-card">
               <label className="block text-sm font-medium mb-4 flex items-center gap-2">
                 <User size={16} /> Your Answer
               </label>
@@ -183,9 +183,9 @@ const Interview: React.FC = () => {
             key="feedback"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-6 max-w-2xl mx-auto"
+            className="space-y-6 w-full"
           >
-            <div className="bg-card border border-border rounded-2xl p-8 shadow-lg text-center overflow-hidden relative">
+            <div className="glass-card rounded-2xl p-8 shadow-2xl text-center overflow-hidden relative">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500" />
 
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-zinc-100 dark:bg-zinc-900 mb-6 relative">

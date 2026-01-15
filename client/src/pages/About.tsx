@@ -40,11 +40,11 @@ const About: React.FC = () => {
   return (
     <div className="space-y-12">
       {/* Hero Section */}
-      <div className="text-center max-w-3xl mx-auto">
+      <div className="w-full">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-8"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-4">
             About CodeMate

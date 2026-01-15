@@ -12,9 +12,12 @@ import {
   Menu,
   GraduationCap,
   BrainCircuit,
-  Code
+  Code,
+  Sun,
+  Moon
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 import { motion } from "framer-motion";
 import clsx from "clsx";
 
@@ -53,6 +56,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, path, acti
 
 const Layout = () => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
@@ -87,11 +91,22 @@ const Layout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex relative overflow-hidden">
+    <div className="h-screen w-full bg-background flex relative overflow-hidden">
       {/* Global Ambient Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 opacity-40">
-        <div className="absolute top-[-10%] left-[-20%] w-[50vw] h-[50vh] bg-primary/10 rounded-full blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[-20%] w-[50vw] h-[50vh] bg-secondary/10 rounded-full blur-[150px]" />
+      <div className="fixed inset-0 pointer-events-none z-0 transition-opacity duration-500">
+         <div className={clsx(
+            "absolute inset-0 bg-grid-pattern opacity-[0.05] transition-opacity duration-500",
+            theme === 'dark' ? "opacity-[0.05]" : "opacity-[0.02]"
+         )} />
+         
+         <div className={clsx(
+          "absolute top-[-10%] left-[-20%] w-[50vw] h-[50vh] rounded-full blur-[120px] transition-colors duration-500",
+          theme === 'dark' ? "bg-primary/20 opacity-20" : "bg-blue-100/20 opacity-30"
+        )} />
+        <div className={clsx(
+          "absolute bottom-[-10%] right-[-20%] w-[50vw] h-[50vh] rounded-full blur-[120px] transition-colors duration-500",
+          theme === 'dark' ? "bg-accent/20 opacity-20" : "bg-teal-100/20 opacity-30"
+        )} />
       </div>
 
       {/* Mobile Overlay */}
@@ -107,21 +122,28 @@ const Layout = () => {
         initial={false}
         animate={{ width: collapsed ? 80 : 260 }}
         className={clsx(
-          "fixed top-0 left-0 z-50 h-screen bg-card border-r border-border flex flex-col transition-all duration-300 ease-in-out shadow-xl",
+          "fixed lg:relative top-0 left-0 z-50 h-screen bg-card border-r border-border flex flex-col transition-all duration-300 ease-in-out shadow-xl lg:shadow-none",
           !mobileOpen && "-translate-x-full lg:translate-x-0",
           mobileOpen && "translate-x-0"
         )}
       >
-        {/* Sidebar Header */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-border">
           {!collapsed && (
             <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
                 <Code2 size={20} />
               </div>
-              <span>CodeMate</span>
+              <span className="text-foreground">CodeMate</span>
             </div>
           )}
+          
+          <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors mr-2"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          
           {collapsed && (
             <div className="w-full flex justify-center">
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground">
@@ -137,7 +159,6 @@ const Layout = () => {
           </button>
         </div>
 
-        {/* Nav Items */}
         <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1 scrollbar-none">
           {navItems.map((item) => (
             <SidebarItem
@@ -151,7 +172,6 @@ const Layout = () => {
           ))}
         </div>
 
-        {/* User Footer */}
         <div className="p-4 border-t border-border bg-muted/30">
           <div className={clsx("flex items-center gap-3", collapsed && "justify-center")}>
             <div className="w-9 h-9 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 font-medium shrink-0">
@@ -159,7 +179,7 @@ const Layout = () => {
             </div>
             {!collapsed && (
               <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium truncate">{user?.name}</p>
+                <p className="text-sm font-medium truncate text-foreground">{user?.name}</p>
                 <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
               </div>
             )}
@@ -167,7 +187,6 @@ const Layout = () => {
               <button
                 onClick={handleLogout}
                 className="p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 transition-colors"
-                title="Logout"
               >
                 <LogOut size={16} />
               </button>
@@ -176,11 +195,9 @@ const Layout = () => {
         </div>
       </motion.aside>
 
-      {/* Main Content */}
       <div
         className={clsx(
-          "flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out",
-          collapsed ? "lg:ml-[80px]" : "lg:ml-[260px]"
+          "flex-1 h-full flex flex-col transition-all duration-300 ease-in-out relative z-10 min-w-0"
         )}
       >
         {/* Top Mobile Navbar */}
@@ -192,19 +209,22 @@ const Layout = () => {
             >
               <Menu size={20} />
             </button>
-            <span className="font-bold text-lg">CodeMate</span>
+            <span className="font-bold text-lg text-foreground">CodeMate</span>
           </div>
-          <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-sm font-medium">
-            {user?.name?.[0]}
+          <div className="flex items-center gap-3">
+             <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 transition-colors"
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
           </div>
         </header>
 
-        {/* Main Viewport */}
-        <main className="flex-1 p-4 lg:p-8 overflow-x-hidden">
-          <div className="max-w-7xl mx-auto w-full">
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Outlet />
-            </div>
+        {/* Main Viewport - Scrollable Area */}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-custom p-4 lg:p-8">
+          <div className="w-full h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Outlet />
           </div>
         </main>
       </div>

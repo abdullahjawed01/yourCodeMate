@@ -43,7 +43,7 @@ const AIMentor: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] max-w-5xl mx-auto space-y-4">
+    <div className="flex flex-col h-[calc(100vh-6rem)] w-full space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
@@ -58,7 +58,7 @@ const AIMentor: React.FC = () => {
       {/* Chat Area */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto space-y-6 p-4 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 scroll-smooth"
+        className="flex-1 overflow-y-auto space-y-6 p-6 rounded-3xl glass-card scrollbar-custom"
       >
         <AnimatePresence initial={false}>
           {messages.map((msg, idx) => (
@@ -67,22 +67,22 @@ const AIMentor: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className={clsx(
-                "flex gap-4 max-w-3xl",
+                "flex gap-4 w-full",
                 msg.role === 'user' ? "ml-auto flex-row-reverse" : ""
               )}
             >
               <div className={clsx(
-                "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm",
-                msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
+                "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-background",
+                msg.role === 'user' ? "bg-gradient-to-br from-primary to-blue-600 text-white" : "bg-gradient-to-br from-indigo-500 to-purple-600 text-white"
               )}>
-                {msg.role === 'user' ? <User size={16} /> : <Sparkles size={16} className="text-indigo-500" />}
+                {msg.role === 'user' ? <User size={18} /> : <Sparkles size={18} />}
               </div>
 
               <div className={clsx(
-                "p-4 rounded-2xl shadow-sm text-sm leading-relaxed",
+                "p-5 rounded-2xl shadow-sm text-sm leading-relaxed max-w-[85%]",
                 msg.role === 'user'
-                  ? "bg-primary text-primary-foreground rounded-tr-none"
-                  : "bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-tl-none"
+                  ? "bg-primary text-primary-foreground rounded-tr-none shadow-md"
+                  : "bg-background/80 backdrop-blur-sm border border-border/50 rounded-tl-none shadow-sm"
               )}>
                 <ReactMarkdown
                   className={clsx("prose max-w-none text-sm", msg.role === 'user' ? "prose-invert" : "dark:prose-invert")}
@@ -94,7 +94,7 @@ const AIMentor: React.FC = () => {
           ))}
 
           {mutation.isPending && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-4 max-w-3xl">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-4 w-full">
               <div className="w-8 h-8 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center shrink-0">
                 <Loader2 size={16} className="animate-spin text-indigo-500" />
               </div>
@@ -114,7 +114,7 @@ const AIMentor: React.FC = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about code, errors, or concepts..."
-            className="w-full pl-4 pr-12 py-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
+            className="w-full pl-6 pr-14 py-4 rounded-full border border-border/50 bg-background/50 backdrop-blur-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-lg hover:shadow-xl"
           />
           <button
             type="submit"

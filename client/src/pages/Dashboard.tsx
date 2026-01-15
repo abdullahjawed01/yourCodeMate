@@ -1,165 +1,145 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { Trophy, Zap, Target, Code, CheckCircle, ArrowRight } from 'lucide-react';
-import { dashboardApi } from '@/services/api';
+import { BrainCircuit, Sparkles, Terminal, GraduationCap, ShieldCheck, Rocket } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { Card } from '@/components/ui/Card';
 import { TiltCard } from '@/components/ui/TiltCard';
-import { Badge } from '@/components/ui/Badge';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { cn } from '@/utils/cn';
+
+import InteractiveBackground from '@/components/InteractiveBackground';
+import DashboardHero from '@/components/DashboardHero';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: dashboardApi.getDashboard,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center space-y-4">
-          <LoadingSpinner size="lg" />
-          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const stats = [
-    {
-      label: 'Points',
-      value: dashboardData?.points || 0,
-      icon: Zap,
-      color: 'text-yellow-600 dark:text-yellow-400',
-      bg: 'bg-yellow-50 dark:bg-yellow-900/20',
-    },
-    {
-      label: 'Level',
-      value: dashboardData?.level || 1,
-      icon: Target,
-      color: 'text-primary-600 dark:text-primary-400',
-      bg: 'bg-primary-50 dark:bg-primary-900/20',
-    },
-    {
-      label: 'Badges',
-      value: dashboardData?.badges?.length || 0,
-      icon: Trophy,
-      color: 'text-purple-600 dark:text-purple-400',
-      bg: 'bg-purple-50 dark:bg-purple-900/20',
-    },
-    {
-      label: 'Completed',
-      value: dashboardData?.tests?.filter((t) => t.completed).length || 0,
-      icon: CheckCircle,
-      color: 'text-green-600 dark:text-green-400',
-      bg: 'bg-green-50 dark:bg-green-900/20',
-    },
-  ];
-
-  const difficultyColors = {
-    easy: 'success',
-    medium: 'warning',
-    hard: 'danger',
-  } as const;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Welcome back, {user?.name}!
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">Continue your coding journey</p>
-      </div>
+    <div className="relative">
+      <InteractiveBackground />
+      
+      <div className="space-y-8 pb-12">
+      {/* Hero Section */}
+      <DashboardHero userName={user?.name || 'Developer'} />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <TiltCard className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={cn('p-3 rounded-lg', stat.bg)}>
-                    <Icon className={cn('w-6 h-6', stat.color)} />
-                  </div>
-                </div>
-                <p className="text-3xl font-bold text-gray-100 mb-1 text-glow">
-                  {stat.value}
-                </p>
-                <p className="text-sm text-gray-400">{stat.label}</p>
-              </TiltCard>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* Available Tests */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Available Tests
-          </h2>
-          <Link
-            to="/test"
-            className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium flex items-center gap-1 transition-colors"
-          >
-            View All
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+        {/* Feature Toolkit Header */}
+        <div className="border-b border-border/50 pb-4">
+          <h2 className="text-3xl font-bold tracking-tight">Feature Toolkit</h2>
+          <p className="text-muted-foreground">Everything you need to master your coding career</p>
         </div>
 
-        {dashboardData?.tests && dashboardData.tests.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {dashboardData.tests.slice(0, 6).map((test, index) => (
-              <motion.div
-                key={test._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Link to={`/tests/${test._id}`} className="block h-full cursor-pointer">
-                  <TiltCard className="p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-lg font-semibold text-gray-100 flex-1 group-hover:text-primary-300 transition-colors">
-                        {test.title}
-                      </h3>
-                      {test.completed && (
-                        <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 ml-2" />
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-400 line-clamp-2 mb-4">
-                      {test.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <Badge variant={difficultyColors[test.difficulty] || 'default'}>
-                        {test.difficulty}
-                      </Badge>
-                      <span className="text-sm text-gray-400">
-                        {test.maxScore} pts
-                      </span>
-                    </div>
-                  </TiltCard>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <Card className="p-8 text-center">
-            <Code className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">No tests available</p>
-          </Card>
-        )}
+        {/* Why Your CodeMate? - Informational Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Link to="/interview">
+            <TiltCard className="p-6 border-l-4 border-l-blue-500 h-full overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-blue-500/10 text-blue-500">
+                  <BrainCircuit size={24} />
+                </div>
+                <h3 className="font-bold text-lg">AI Technical Interviews</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Practice real-world interview scenarios with our advanced AI. Get instant, detailed feedback on your solutions and communication skills.
+              </p>
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <BrainCircuit size={80} />
+              </div>
+            </TiltCard>
+          </Link>
+
+          <Link to="/ide">
+            <TiltCard className="p-6 border-l-4 border-l-purple-500 h-full overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-purple-500/10 text-purple-500">
+                  <Terminal size={24} />
+                </div>
+                <h3 className="font-bold text-lg">Interactive IDE</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Write, compile, and execute Python and JavaScript code directly in your browser. A secure environment with real-time output.
+              </p>
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Terminal size={80} />
+              </div>
+            </TiltCard>
+          </Link>
+
+          <Link to="/mentor">
+            <TiltCard className="p-6 border-l-4 border-l-teal-500 h-full overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-teal-500/10 text-teal-500">
+                  <Sparkles size={24} />
+                </div>
+                <h3 className="font-bold text-lg">AI Coding Mentor</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Stuck on a bug? Need a concept explained? Our AI Mentor is available 24/7 to guide you through your coding journey and best practices.
+              </p>
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Sparkles size={80} />
+              </div>
+            </TiltCard>
+          </Link>
+
+          <Link to="/paths">
+            <TiltCard className="p-6 border-l-4 border-l-amber-500 h-full overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-amber-500/10 text-amber-500">
+                  <GraduationCap size={24} />
+                </div>
+                <h3 className="font-bold text-lg">Structured Paths</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Follow curated roadmaps for Frontend, Backend, and Fullstack development. Each path is optimized for career success.
+              </p>
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <GraduationCap size={80} />
+              </div>
+            </TiltCard>
+          </Link>
+
+          <Link to="/test">
+            <TiltCard className="p-6 border-l-4 border-l-indigo-500 h-full overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-500">
+                  <ShieldCheck size={24} />
+                </div>
+                <h3 className="font-bold text-lg">Skill Validation</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Earn points, unlock badges, and validate your skills through consistent practice. Showcase your achievements on your profile.
+              </p>
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <ShieldCheck size={80} />
+              </div>
+            </TiltCard>
+          </Link>
+
+          <Link to="/about">
+            <TiltCard className="p-6 border-l-4 border-l-rose-500 h-full overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.02]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-rose-500/10 text-rose-500">
+                  <Rocket size={24} />
+                </div>
+                <h3 className="font-bold text-lg">Career Growth</h3>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Your CodeMate is built by developers for developers. We focus on the skills that actually matter in the modern tech industry.
+              </p>
+              <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <Rocket size={80} />
+              </div>
+            </TiltCard>
+          </Link>
+        </div>
       </div>
+
+      {/* Footer */}
+      <footer className="py-8 border-t border-border/50 bg-card/30 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 text-center space-y-2">
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} Your CodeMate. All rights reserved.
+          </p>
+          <p className="text-xs font-medium text-zinc-400">
+            Founded by <span className="text-primary">Abdullah Jawed</span>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };

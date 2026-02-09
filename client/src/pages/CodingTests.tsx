@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { Code, Lock, CheckCircle, Zap, Star, Trophy } from 'lucide-react';
+import { Code, Lock, CheckCircle, Zap, Trophy } from 'lucide-react';
 import { testApi } from '@/services/api';
 import { Link } from 'react-router-dom';
 import { cn } from '@/utils/cn';
@@ -155,7 +155,7 @@ const CodingTests: React.FC = () => {
 
       {/* Tests Grid - 3D Enabled */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 perspective-1000">
-        {filteredTests?.map((test, index) => (
+        {filteredTests?.map((test) => (
           <Link
             key={test._id}
             to={test.unlocked ? `/tests/${test._id}` : '#'}

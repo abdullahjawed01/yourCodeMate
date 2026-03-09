@@ -24,6 +24,18 @@ export const authApi = {
   },
 };
 
+// User APIs
+export const userApi = {
+  updateProfile: async (data: { name?: string; bio?: string; country?: string; github?: string; linkedin?: string; }): Promise<any> => {
+    const response = await api.put('/me/profile', data);
+    return response.data;
+  },
+  getUserProfile: async (userId: string): Promise<User> => {
+    const response = await api.get(`/users/${userId}/dashboard`);
+    return response.data;
+  },
+};
+
 // Coding Test APIs
 export const codingTestApi = {
   getAllTests: async (): Promise<CodingTest[]> => {
@@ -72,6 +84,10 @@ export const aiApi = {
 export const dashboardApi = {
   getDashboard: async (): Promise<DashboardData> => {
     const response = await api.get('/dashboard');
+    return response.data;
+  },
+  getUserDashboard: async (userId: string): Promise<DashboardData> => {
+    const response = await api.get(`/users/${userId}/dashboard`);
     return response.data;
   },
 };
@@ -206,43 +222,133 @@ export const adminApi = {
   },
 };
 
-// Python Learning APIs
-export const pythonApi = {
-  getTopics: async (): Promise<any> => {
-    const response = await api.get('/python/topics');
+// Learning APIs (Unified)
+export const learningApi = {
+  getTopics: async (language: string): Promise<any> => {
+    const response = await api.get(`/learn/${language}/topics`);
     return response.data;
   },
-  getTopic: async (slug: string): Promise<any> => {
-    const response = await api.get(`/python/topics/${slug}`);
+  getTopic: async (language: string, slug: string): Promise<any> => {
+    const response = await api.get(`/learn/${language}/topics/${slug}`);
     return response.data;
   },
-  completeTopic: async (topicId: string): Promise<any> => {
-    const response = await api.post('/python/topics/complete', { topicId });
-    return response.data;
-  },
-  passTest: async (topicId: string, testId: string, score: number): Promise<any> => {
-    const response = await api.post('/python/topics/pass-test', { topicId, testId, score });
-    return response.data;
-  },
-  useHint: async (testId: string): Promise<any> => {
-    const response = await api.post('/python/hint/use', { testId });
+  completeTopic: async (language: string, topicId: string): Promise<any> => {
+    const response = await api.post(`/learn/${language}/topics/${topicId}/complete`);
     return response.data;
   },
 };
 
-// JavaScript Learning APIs
-export const javascriptApi = {
-  getTopics: async (): Promise<any> => {
-    const response = await api.get('/javascript/topics');
-    return response.data;
-  },
-  getTopic: async (slug: string): Promise<any> => {
-    const response = await api.get(`/javascript/topics/${slug}`);
-    return response.data;
-  },
-  completeTopic: async (topicId: string): Promise<any> => {
-    const response = await api.post('/javascript/topics/complete', { topicId });
+// Social APIs
+export const socialApi = {
+  getFriends: async (): Promise<any> => {
+    const response = await api.get('/social/friends');
     return response.data;
   },
 };
 
+
+
+
+// Battle APIs
+export const battleApi = {
+  getLobby: async (): Promise<any> => {
+    const response = await api.get('/games/battles');
+    return response.data;
+  },
+};
+
+// Contest APIs
+export const contestApi = {
+  getContests: async (): Promise<any[]> => {
+    const response = await api.get('/contests');
+    return response.data;
+  },
+  getContest: async (id: string): Promise<any> => {
+    const response = await api.get(`/contests/${id}`);
+    return response.data;
+  },
+  joinContest: async (id: string): Promise<any> => {
+    const response = await api.post(`/contests/${id}/join`);
+    return response.data;
+  },
+};
+
+// Friends/Social APIs
+export const friendsApi = {
+  getFriends: async (): Promise<any> => {
+    const response = await api.get('/social/friends', { silentFail: true } as any);
+    return response.data;
+  },
+  getSuggestions: async (): Promise<any[]> => {
+    const response = await api.get('/social/suggestions', { silentFail: true } as any);
+    return response.data;
+  },
+  sendRequest: async (targetUserId: string): Promise<any> => {
+    const response = await api.post('/social/friends/request', { targetUserId });
+    return response.data;
+  },
+  acceptRequest: async (requesterId: string): Promise<any> => {
+    const response = await api.post('/social/friends/accept', { requesterId });
+    return response.data;
+  },
+  declineRequest: async (requesterId: string): Promise<any> => {
+    const response = await api.post('/social/friends/decline', { requesterId });
+    return response.data;
+  },
+  removeFriend: async (friendId: string): Promise<any> => {
+    const response = await api.delete('/social/friends/remove', { data: { friendId } });
+    return response.data;
+  },
+};
+
+// Chat APIs
+export const chatApi = {
+  getRooms: async (): Promise<any> => {
+    const response = await api.get('/chat-api/rooms', { silentFail: true } as any);
+    return response.data;
+  },
+  getMessages: async (roomId: string): Promise<any[]> => {
+    const response = await api.get(`/chat-api/messages/${encodeURIComponent(roomId)}`, { silentFail: true } as any);
+    return response.data;
+  },
+  sendMessage: async (data: { room: string; content: string; replyTo?: string }): Promise<any> => {
+    const response = await api.post('/chat-api/messages', data);
+    return response.data;
+  },
+  addReaction: async (messageId: string, emoji: string): Promise<any> => {
+    const response = await api.post(`/chat-api/messages/${messageId}/react`, { emoji });
+    return response.data;
+  },
+};
+
+// Community APIs
+export const communityApi = {
+  getPosts: async (params?: { type?: string; search?: string; sort?: string; page?: number }): Promise<any> => {
+    const response = await api.get('/community', { params, silentFail: true } as any);
+    return response.data;
+  },
+  getPost: async (id: string): Promise<any> => {
+    const response = await api.get(`/community/${id}`, { silentFail: true } as any);
+    return response.data;
+  },
+  createPost: async (data: { title: string; content: string; type: string; tags: string[]; code?: string; language?: string }): Promise<any> => {
+    const response = await api.post('/community', data);
+    return response.data;
+  },
+  upvotePost: async (id: string): Promise<any> => {
+    const response = await api.post(`/community/${id}/upvote`);
+    return response.data;
+  },
+  addReply: async (id: string, content: string): Promise<any> => {
+    const response = await api.post(`/community/${id}/reply`, { content });
+    return response.data;
+  },
+  deletePost: async (id: string): Promise<any> => {
+    const response = await api.delete(`/community/${id}`);
+    return response.data;
+  },
+  getStats: async (): Promise<any> => {
+    const response = await api.get('/community/stats', { silentFail: true } as any);
+    return response.data;
+  },
+};

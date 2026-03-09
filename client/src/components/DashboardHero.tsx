@@ -4,65 +4,59 @@ import { Link } from 'react-router-dom';
 
 const DashboardHero = ({ userName }: { userName: string }) => {
   return (
-    <div className="relative w-full py-8 md:py-12 overflow-hidden">
-      <div className="relative z-10 max-w-6xl">
+    <div className="relative w-full overflow-hidden rounded-3xl border border-border/50 glass-card-premium min-h-[500px] flex items-center mb-12 shadow-cyber-strong">
+
+      {/* Cyberpunk Grid Overlay */}
+      <div className="absolute inset-0 z-[1] bg-grid-pattern opacity-30 pointer-events-none" />
+      <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-background via-background/80 to-transparent z-[2]" />
+
+      <div className="relative z-10 px-8 md:px-16 w-full max-w-7xl mx-auto py-16 pointer-events-none">
+
         <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6"
+          initial={{ opacity: 0, scale: 0.9, x: -20 }}
+          animate={{ opacity: 1, scale: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-accent-neon/30 bg-accent-neon/10 text-accent-neon text-sm font-medium mb-8 backdrop-blur-md shadow-cyber pointer-events-auto"
         >
-            <Zap size={14} className="fill-current" />
-            <span>AI-Powered Learning Era</span>
+          <Zap size={16} className="fill-current animate-pulse" />
+          <span className="tracking-wide uppercase text-xs">Awwwards Winning Interface</span>
         </motion.div>
-        
-        <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70"
+
+        <motion.h1
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-6 text-white drop-shadow-2xl"
         >
-          Welcome back, <br/>
-          <span className="text-primary">{userName}</span>.
+          Welcome to the<br />
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-neon via-blue-400 to-primary">Future, {userName}.</span>
         </motion.h1>
 
-        <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
-            className="text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed"
+        <motion.p
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="text-xl md:text-2xl text-blue-100/70 mb-12 max-w-2xl font-light tracking-wide leading-relaxed"
         >
-          Your daily mission: Write code that matters. Pick up where you left off or start a new challenge.
+          Your daily mission: Write code that matters. Navigate the 3D landscape of logic and build something incredible.
         </motion.p>
-        
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-wrap gap-4"
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-wrap gap-6 pointer-events-auto"
         >
-           <Link to="/ide" className="group relative inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-white transition-all duration-200 bg-primary rounded-full hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1">
-              Open IDE
-              <Terminal className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-           </Link>
-           <Link to="/paths" className="group inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-foreground transition-all duration-200 bg-card border border-border/50 rounded-full hover:bg-muted focus:outline-none hover:shadow-md hover:-translate-y-1">
-              View Paths
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform opacity-50" />
-           </Link>
+          <Link to="/ide" className="group relative inline-flex items-center justify-center px-10 py-4 text-sm font-bold tracking-widest uppercase text-black transition-all duration-300 bg-accent-neon hover:bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-neon focus:ring-offset-black shadow-cyber hover:shadow-cyber-strong hover:-translate-y-1">
+            Initialise Space
+            <Terminal className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <Link to="/paths" className="group inline-flex items-center justify-center px-10 py-4 text-sm font-bold tracking-widest uppercase text-white transition-all duration-300 bg-transparent border-2 border-white/20 rounded-lg hover:border-white hover:bg-white/10 focus:outline-none hover:-translate-y-1 backdrop-blur-sm">
+            Explore Paths
+            <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
         </motion.div>
       </div>
-
-      {/* Decorative Hero Elements */}
-      <motion.div 
-         animate={{ rotate: 360 }}
-         transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-         className="absolute top-10 right-0 md:right-[-5%] w-[400px] h-[400px] border border-dashed border-primary/20 rounded-full opacity-30 pointer-events-none"
-      />
-      <motion.div 
-         animate={{ rotate: -360 }}
-         transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-         className="absolute top-20 right-10 md:right-[5%] w-[300px] h-[300px] border border-dashed border-accent/20 rounded-full opacity-30 pointer-events-none"
-      />
     </div>
   );
 };

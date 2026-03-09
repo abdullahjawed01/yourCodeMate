@@ -7,33 +7,72 @@ import os from 'os';
 export const runCode = async (req, res) => {
   const { language, code } = req.body;
 
-  if (language !== 'python' && language !== 'javascript') {
-    return res.status(400).json({ output: "Only Python and JavaScript are currently supported." });
+  const supportedLanguages = ['python', 'javascript', 'typescript', 'java', 'cpp', 'rust', 'ruby', 'swift'];
+  if (!supportedLanguages.includes(language)) {
+    return res.status(400).json({ output: "Language " + language + " is not supported." });
   }
 
   if (!code) {
     return res.status(400).json({ output: "No code provided." });
   }
 
-  const extension = language === 'python' ? 'py' : 'js';
-  const filename = `${uuidv4()}.${extension}`;
+  const exts = {
+    python: 'py', javascript: 'js', typescript: 'ts', java: 'java',
+    cpp: 'cpp', rust: 'rs', ruby: 'rb', swift: 'swift'
+  };
+  
+  const ext = exts[language];
+  const uniqueId = uuidv4();
+  // Java requires the class name to match the file name if it's public, so let's name it Solution.java for java
+  const filename = language === 'java' ? "Solution_" + uniqueId.replace(/-/g, '') + ".java" : uniqueId + "." + ext;
   const tempDir = os.tmpdir();
   const filePath = path.join(tempDir, filename);
+  const outPath = path.join(tempDir, uniqueId); // for compiled languages
 
   try {
-    await fs.writeFile(filePath, code);
+    let codeToWrite = code;
+    // For Java, replace public class Solution with the dynamic filename to avoid compile errors
+    if (language === 'java') {
+      const className = path.basename(filename, '.java');
+      codeToWrite = code.replace(/public class [A-Za-z0-9_]+/g, "public class " + className);
+    }
 
-    const command = language === 'python' ? 'python3' : 'node';
-    const childProcess = spawn(command, [filePath]);
+    await fs.writeFile(filePath, codeToWrite);
+
+    let command = '';
+    let args = [];
+
+    switch (language) {
+      case 'python':
+        command = 'python3'; args = [filePath]; break;
+      case 'javascript':
+        command = 'node'; args = [filePath]; break;
+      case 'typescript':
+        command = 'npx'; args = ['ts-node', filePath]; break;
+      case 'ruby':
+        command = 'ruby'; args = [filePath]; break;
+      case 'swift':
+        command = 'swift'; args = [filePath]; break;
+      case 'cpp':
+        command = 'sh'; args = ['-c', 'g++ "' + filePath + '" -o "' + outPath + '" && "' + outPath + '"']; break;
+      case 'rust':
+        command = 'sh'; args = ['-c', 'rustc "' + filePath + '" -o "' + outPath + '" && "' + outPath + '"']; break;
+      case 'java':
+        const dir = path.dirname(filePath);
+        const name = path.basename(filename, '.java');
+        command = 'sh'; args = ['-c', 'javac "' + filePath + '" && java -cp "' + dir + '" ' + name]; break;
+    }
+
+    const childProcess = spawn(command, args);
 
     let output = '';
     let errorOutput = '';
 
-    // Timeout (5 seconds)
+    // Timeout (10 seconds to allow for compilation)
     const timeout = setTimeout(() => {
       childProcess.kill();
-      output += '\n\n[Timeout Error]: Execution exceeded 5 seconds.';
-    }, 5000);
+      output += '\n\n[Timeout Error]: Execution exceeded 10 seconds.';
+    }, 10000);
 
     childProcess.stdout.on('data', (data) => {
       output += data.toString();
@@ -43,20 +82,21 @@ export const runCode = async (req, res) => {
       errorOutput += data.toString();
     });
 
-    childProcess.on('close', async (code) => {
+    childProcess.on('close', async (exitCode) => {
       clearTimeout(timeout);
       
-      // Cleanup temp file
+      // Cleanup temp files
       try {
-        await fs.unlink(filePath);
-      } catch (err) {
-        console.error("Failed to delete temp file:", err);
-      }
+        await fs.unlink(filePath).catch(() => {});
+        if (['cpp', 'rust'].includes(language)) await fs.unlink(outPath).catch(() => {});
+        if (language === 'java') {
+            const classFile = filePath.replace('.java', '.class');
+            await fs.unlink(classFile).catch(() => {});
+        }
+      } catch (err) {}
 
-      if (code !== 0) {
-        // Combine output and error for better feedback
-        // If there is stderr, it usually is the error description
-        res.status(200).json({ output: output + (errorOutput ? `\nError:\n${errorOutput}` : '') });
+      if (exitCode !== 0) {
+        res.status(200).json({ output: output + (errorOutput ? "\nError:\n" + errorOutput : '') });
       } else {
         res.status(200).json({ output: output || "Process finished with no output." });
       }
@@ -64,6 +104,6 @@ export const runCode = async (req, res) => {
 
   } catch (error) {
     console.error("IDE Error:", error);
-    res.status(500).json({ output: `Server Error: ${error.message}` });
+    res.status(500).json({ output: "Server Error: " + error.message });
   }
 };

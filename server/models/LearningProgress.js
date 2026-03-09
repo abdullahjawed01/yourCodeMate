@@ -7,30 +7,18 @@ const learningProgressSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  pythonTopics: [{
-    topicId: { type: mongoose.Schema.Types.ObjectId, ref: "PythonTopic" },
-    completed: { type: Boolean, default: false },
-    completedAt: { type: Date },
-    pointsEarned: { type: Number, default: 0 },
-    testPassed: { type: Boolean, default: false },
-    testScore: { type: Number },
+  languageProgress: [{
+    language: { type: String, required: true },
+    topics: [{
+      topicId: { type: mongoose.Schema.Types.ObjectId, ref: "LanguageTopic" },
+      completed: { type: Boolean, default: false },
+      completedAt: { type: Date },
+      pointsEarned: { type: Number, default: 0 },
+      testPassed: { type: Boolean, default: false },
+      testScore: { type: Number },
+    }],
+    currentTopic: { type: mongoose.Schema.Types.ObjectId, ref: "LanguageTopic" }
   }],
-  javascriptTopics: [{
-    topicId: { type: mongoose.Schema.Types.ObjectId, ref: "JavascriptTopic" },
-    completed: { type: Boolean, default: false },
-    completedAt: { type: Date },
-    pointsEarned: { type: Number, default: 0 },
-    testPassed: { type: Boolean, default: false },
-    testScore: { type: Number },
-  }],
-  currentTopic: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "PythonTopic" 
-  },
-  currentJsTopic: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: "JavascriptTopic" 
-  },
   totalPoints: { type: Number, default: 0 },
   hintsUsed: { type: Number, default: 0 },
   hintsUnlocked: { type: Number, default: 0 },

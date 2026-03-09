@@ -1,10 +1,10 @@
 import Progress from "../models/Progress.js";
-import Test from "../models/Test.js";  // ✅ Add this line here
+import CodingTest from "../models/CodingTest.js";
 
 export const getProgress = async (req, res) => {
   try {
     const progress = await Progress.findOne({ user: req.user._id })
-      .populate("completedTests", "title difficulty"); // uses Test
+      .populate("completedTests", "title difficulty"); // uses CodingTest
 
     if (!progress) {
       return res.status(404).json({ message: "No progress found" });

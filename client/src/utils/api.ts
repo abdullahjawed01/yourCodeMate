@@ -3,6 +3,13 @@ import type { ApiError } from '@/types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
+// Extend the config type to support silentFail
+declare module 'axios' {
+  interface InternalAxiosRequestConfig {
+    silentFail?: boolean;
+  }
+}
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -25,18 +32,25 @@ api.interceptors.request.use(
 );
 
 // Response interceptor to handle errors
+// Uses `silentFail: true` config to avoid redirecting on background/non-critical API calls
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ApiError>) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      const config = error.config as InternalAxiosRequestConfig;
+      // Only auto-redirect if this is a critical auth failure (not a background call)
+      if (!config?.silentFail) {
+        const url = config?.url || '';
+        const isCritical = url.includes('/me') || url.includes('/auth');
+        if (isCritical) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+      }
     }
     return Promise.reject(error);
   }
 );
 
 export default api;
-
-

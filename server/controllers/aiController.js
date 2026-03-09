@@ -1,7 +1,7 @@
 import groq from "../utils/groqClient.js";
 import Progress from "../models/Progress.js";
 import CodingTest from "../models/CodingTest.js";
-import PythonTopic from "../models/PythonTopic.js";
+import LanguageTopic from "../models/LanguageTopic.js";
 import LearningProgress from "../models/LearningProgress.js";
 
 /**
@@ -10,8 +10,8 @@ import LearningProgress from "../models/LearningProgress.js";
 export const evaluateCode = async (req, res) => {
   try {
     const { testId, code } = req.body;
-    if (!testId || !code) {
-      return res.status(400).json({ message: "testId and code required" });
+    if (!testId || !code || !code.trim() || code.trim() === '// Write your solution here' || code.trim() === 'def twoSum(nums, target):\\n    # Your solution here\\n    pass') {
+      return res.status(400).json({ message: "Empty submissions are not allowed. Please write a valid solution." });
     }
 
     const test = await CodingTest.findById(testId);
@@ -94,8 +94,8 @@ Respond ONLY in valid JSON:
 
     // 🔒 FINAL SCORE GUARANTEE
     let finalScore = Number(aiResult.score);
-    if (!finalScore || isNaN(finalScore) || finalScore < 0) {
-      finalScore = Math.min(test.maxScore, 50); // Default to 50 or maxScore
+    if (finalScore === undefined || finalScore === null || isNaN(finalScore) || finalScore < 0) {
+      finalScore = 0; // Default to 0 for invalid scores, NEVER 50
     }
     if (finalScore > test.maxScore) {
       finalScore = test.maxScore;
@@ -125,64 +125,36 @@ Respond ONLY in valid JSON:
 
     await progress.save();
 
-    // 🚀 CRITICAL FIX: Unlock Next Topic in Learning Paths
-    // Check if this test is associated with any PythonTopic
-    if (finalScore >= (test.passScore || 50)) { // Assuming 50 is pass
-       // Check Python Topics
-       const pythonTopic = await PythonTopic.findOne({ testId: test._id });
-       if (pythonTopic) {
+    // 🚀 UNLOCK NEXT TOPIC IN LEARNING PATHS
+    if (finalScore >= (test.passScore || 50)) {
+       const topic = await LanguageTopic.findById(test.topicId || (await LanguageTopic.findOne({ testId: test._id }))?._id);
+       
+       if (topic) {
+          const language = topic.language;
           let learningProgress = await LearningProgress.findOne({ user: req.user._id });
+          
           if (!learningProgress) {
              learningProgress = await LearningProgress.create({
                user: req.user._id,
-               pythonTopics: [],
+               languageProgress: [],
                totalPoints: 0
-             });
-          }
-          
-          const topicProgress = learningProgress.pythonTopics.find(p => p.topicId.toString() === pythonTopic._id.toString());
-          if (topicProgress) {
-             topicProgress.testPassed = true;
-             topicProgress.testScore = finalScore;
-          } else {
-             learningProgress.pythonTopics.push({
-               topicId: pythonTopic._id,
-               testPassed: true,
-               testScore: finalScore,
-               completed: true // Auto-complete if test passed? Usually yes.
              });
           }
 
-          // Unlock next topic
-          const nextTopic = await PythonTopic.findOne({ order: pythonTopic.order + 1 });
-          if (nextTopic) {
-            learningProgress.currentTopic = nextTopic._id;
+          let langProgress = learningProgress.languageProgress.find(lp => lp.language === language);
+          if (!langProgress) {
+             langProgress = { language, topics: [], currentTopic: topic._id };
+             learningProgress.languageProgress.push(langProgress);
           }
-          
-          await learningProgress.save();
-       }
-       
-       // Check JavaScript Topics
-       const javascriptTopic = await import("../models/JavascriptTopic.js").then(m => m.default.findOne({ testId: test._id }));
-       if (javascriptTopic) {
-          let learningProgress = await LearningProgress.findOne({ user: req.user._id });
-          if (!learningProgress) {
-             learningProgress = await LearningProgress.create({
-               user: req.user._id,
-               pythonTopics: [],
-               javascriptTopics: [],
-               totalPoints: 0
-             });
-          }
-          if (!learningProgress.javascriptTopics) learningProgress.javascriptTopics = [];
-          
-          const topicProgress = learningProgress.javascriptTopics.find(p => p.topicId.toString() === javascriptTopic._id.toString());
-          if (topicProgress) {
-             topicProgress.testPassed = true;
-             topicProgress.testScore = finalScore;
+
+          const topicEntry = langProgress.topics.find(t => t.topicId.toString() === topic._id.toString());
+          if (topicEntry) {
+             topicEntry.testPassed = true;
+             topicEntry.testScore = finalScore;
+             topicEntry.completed = true;
           } else {
-             learningProgress.javascriptTopics.push({
-               topicId: javascriptTopic._id,
+             langProgress.topics.push({
+               topicId: topic._id,
                testPassed: true,
                testScore: finalScore,
                completed: true
@@ -190,11 +162,16 @@ Respond ONLY in valid JSON:
           }
 
           // Unlock next topic
-          const nextTopic = await import("../models/JavascriptTopic.js").then(m => m.default.findOne({ order: javascriptTopic.order + 1 }));
+          const nextTopic = await LanguageTopic.findOne({ 
+             language, 
+             order: topic.order + 1 
+          });
+          
           if (nextTopic) {
-            learningProgress.currentJsTopic = nextTopic._id;
+             langProgress.currentTopic = nextTopic._id;
           }
           
+          learningProgress.totalPoints += (topic.pointsReward || 10);
           await learningProgress.save();
        }
     }

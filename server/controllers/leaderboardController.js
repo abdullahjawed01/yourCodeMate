@@ -1,42 +1,57 @@
-import Progress from "../models/Progress.js";
 import User from "../models/User.js";
 
-// Get top users
+// Get top 50 users by points (global leaderboard)
 export const getLeaderboard = async (req, res) => {
   try {
-    // Top 10 users by points
-    const topUsers = await Progress.find({})
+    const topUsers = await User.find({})
       .sort({ points: -1 })
-      .limit(10)
-      .populate("user", "name email"); // Show name & email only
+      .limit(50)
+      .select('name email points level streak badges createdAt');
 
-    res.status(200).json({ leaderboard: topUsers });
+    // Add rank number to each entry
+    const leaderboard = topUsers.map((u, i) => ({
+      _id: u._id,
+      name: u.name,
+      email: u.email,
+      points: u.points || 0,
+      level: u.level || 1,
+      streak: u.streak || 0,
+      badges: u.badges || [],
+      rank: i + 1,
+    }));
+
+    res.status(200).json(leaderboard);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Get your rank
+// Get current user's rank
 export const getUserRank = async (req, res) => {
   try {
-    const userProgress = await Progress.findOne({ user: req.user._id });
+    const me = await User.findById(req.user._id).select('name points level streak badges');
 
-    if (!userProgress) {
-      return res.status(404).json({ message: "User progress not found" });
+    if (!me) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     // Count users with more points
-    const higherUsers = await Progress.countDocuments({ points: { $gt: userProgress.points } });
-
-    const rank = higherUsers + 1; // Rank starts at 1
+    const higherCount = await User.countDocuments({ points: { $gt: me.points || 0 } });
+    const rank = higherCount + 1;
 
     res.status(200).json({
-      user: req.user.name,
-      points: userProgress.points,
-      level: userProgress.level,
-      rank
+      rank,
+      user: {
+        _id: me._id,
+        name: me.name,
+        points: me.points || 0,
+        level: me.level || 1,
+        streak: me.streak || 0,
+        badges: me.badges || [],
+      }
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+

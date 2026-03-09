@@ -54,7 +54,10 @@ export const getUserDashboard = async (req, res) => {
       level: progress.level,
       badges: progress.badges,
       notifications: progress.notifications,
-      tests: dashboardTests
+      tests: dashboardTests,
+      streak: req.user.streak || 0,
+      rank: req.user.rank || 'Novice',
+      battlesWon: req.user.battlesWon || 0
     });
 
   } catch (error) {

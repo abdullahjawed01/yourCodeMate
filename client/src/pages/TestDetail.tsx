@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Play, Lightbulb, CheckCircle, XCircle, Loader2, Brain, TrendingUp, Zap } from 'lucide-react';
-import { testApi, hintApi, aiApi, pythonApi } from '@/services/api';
+import { testApi, hintApi, aiApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import Editor from '@monaco-editor/react';
 import toast from 'react-hot-toast';
@@ -70,22 +70,9 @@ const TestDetail: React.FC = () => {
     },
   });
 
-  const hintMutationPython = useMutation({
-    mutationFn: (testId: string) => pythonApi.useHint(testId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pythonTopics'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      // Call standard hint mutation after verifying/deducting via python path
-      if (test?._id) hintMutation.mutate(test._id);
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to unlock hint');
-    },
-  });
-
   const handleSubmit = () => {
-    if (!test || !code.trim()) {
-      toast.error('Please write some code first');
+    if (!test || !code.trim() || code.trim() === '// Write your solution here') {
+      toast.error('Please write a valid solution before submitting.');
       return;
     }
     submitMutation.mutate({ testId: test._id, code, language });
@@ -93,18 +80,11 @@ const TestDetail: React.FC = () => {
 
   const handleGetHint = () => {
     if (!test) return;
-    // Try Python API first (for learning system), fallback to regular hint API
-    const usePythonHint = window.location.pathname.includes('/python') ||
-      window.location.pathname.includes('/tests');
-    if (usePythonHint) {
-      hintMutationPython.mutate(test._id);
-    } else {
-      if (user && user.points < test.hintCost) {
-        toast.error(`You need ${test.hintCost} points to unlock this hint`);
-        return;
-      }
-      hintMutation.mutate(test._id);
+    if (user && user.points < test.hintCost) {
+      toast.error(`You need ${test.hintCost} points to unlock this hint`);
+      return;
     }
+    hintMutation.mutate(test._id);
   };
 
   const handleGetAIExplanation = () => {
@@ -181,8 +161,8 @@ const TestDetail: React.FC = () => {
           <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button
               onClick={handleGetHint}
-              disabled={hintMutation.isPending || hintMutationPython.isPending}
-              isLoading={hintMutation.isPending || hintMutationPython.isPending}
+              disabled={hintMutation.isPending}
+              isLoading={hintMutation.isPending}
               variant="outline"
               size="sm"
             >

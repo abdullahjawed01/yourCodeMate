@@ -1,14 +1,18 @@
 import mongoose from "mongoose";
 
-const javascriptTopicSchema = new mongoose.Schema({
+const languageTopicSchema = new mongoose.Schema({
+  language: {
+    type: String,
+    enum: ['javascript', 'typescript', 'python', 'java', 'cpp', 'rust', 'ruby', 'swift'],
+    required: true
+  },
   title: { type: String, required: true },
-  slug: { type: String, required: true, unique: true },
+  slug: { type: String, required: true }, // Not globally unique anymore, scoped to language
   description: { type: String, required: true },
   content: { type: String, required: true }, // Markdown content
   order: { type: Number, required: true },
   category: { 
-    type: String, 
-    enum: ['basics', 'dom', 'functions', 'es6', 'advanced', 'async'],
+    type: String,
     required: true 
   },
   prerequisites: [{ type: String }], // Slugs of required topics
@@ -17,10 +21,12 @@ const javascriptTopicSchema = new mongoose.Schema({
   testId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "CodingTest",
-    required: true 
   }, // Test to unlock next topic
   unlocked: { type: Boolean, default: false },
 }, { timestamps: true });
 
-const JavascriptTopic = mongoose.model("JavascriptTopic", javascriptTopicSchema);
-export default JavascriptTopic;
+// Ensure slugs are unique per language
+languageTopicSchema.index({ language: 1, slug: 1 }, { unique: true });
+
+const LanguageTopic = mongoose.model("LanguageTopic", languageTopicSchema);
+export default LanguageTopic;

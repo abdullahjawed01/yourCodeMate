@@ -5,7 +5,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
-import { dashboardApi } from '@/services/api';
+import { dashboardApi, friendsApi } from '@/services/api';
 import {
   BrainCircuit, Sparkles, Terminal,
   Flame, Trophy, Zap, Target, Swords, Globe2, Star,
@@ -31,13 +31,6 @@ const DAILY_CHALLENGE = {
   solvedCount: 3421,
 };
 
-const RECOMMENDED = [
-  { title: 'Two Sum', difficulty: 'easy' as const, category: 'Arrays', xp: 50 },
-  { title: 'Binary Tree Traversal', difficulty: 'medium' as const, category: 'Trees', xp: 80 },
-  { title: 'Graph BFS', difficulty: 'medium' as const, category: 'Graphs', xp: 90 },
-  { title: 'Trapping Rain Water', difficulty: 'hard' as const, category: 'Two Pointers', xp: 120 },
-];
-
 const activityData = [
   { name: 'Mon', problems: 4 }, { name: 'Tue', problems: 7 }, { name: 'Wed', problems: 2 },
   { name: 'Thu', problems: 9 }, { name: 'Fri', problems: 12 }, { name: 'Sat', problems: 5 }, { name: 'Sun', problems: 8 }
@@ -50,13 +43,6 @@ const radarData = [
   { subject: 'Databases', A: 99, fullMark: 150 },
   { subject: 'Math', A: 85, fullMark: 150 },
   { subject: 'Concurrency', A: 65, fullMark: 150 },
-];
-
-const FRIEND_FEED = [
-  { name: 'Ali Hassan', action: 'solved', target: 'Binary Search', time: '2m ago', color: 'emerald' },
-  { name: 'Sara Ahmed', action: 'won', target: 'DSA Battle vs Omar', time: '15m ago', color: 'yellow' },
-  { name: 'Rahul Sharma', action: 'joined', target: 'Weekly Contest #42', time: '1h ago', color: 'blue' },
-  { name: 'Zara Ali', action: 'solved', target: 'Merge K Sorted Lists', time: '2h ago', color: 'purple' },
 ];
 
 const QUICK_ACTIONS = [
@@ -160,6 +146,33 @@ const Dashboard: React.FC = () => {
     queryFn: () => dashboardApi.getDashboard(),
     enabled: !!user,
   });
+
+  // Real friends (silentFail so a hiccup never redirects). Powers the dev feed.
+  const { data: friendsData } = useQuery({
+    queryKey: ['dashboard-friends'],
+    queryFn: () => friendsApi.getFriends(),
+    enabled: !!user,
+    retry: 0,
+    staleTime: 60_000,
+  });
+  const friends = (friendsData?.friends ?? []) as Array<{
+    _id: string; name: string; level?: number; points?: number; streak?: number;
+  }>;
+
+  // Recommended problems derived from the user's REAL unlocked-but-unsolved tests.
+  const recommended = useMemo(() => {
+    const tests = (dbData?.tests ?? []) as any[];
+    return tests
+      .filter((t) => t.unlocked && !t.completed)
+      .slice(0, 4)
+      .map((t) => ({
+        id: String(t._id),
+        title: t.title as string,
+        difficulty: (t.difficulty as string) || 'medium',
+        category: (Array.isArray(t.tags) && t.tags[0]) || 'Practice',
+        xp: (t.maxScore as number) || 50,
+      }));
+  }, [dbData]);
 
   // Merge context user with freshly fetched dashboard data
   const streak = dbData?.streak ?? user?.streak ?? 0;
@@ -553,43 +566,52 @@ const Dashboard: React.FC = () => {
 
       {/* ── FRIEND ACTIVITY FEED + RECOMMENDED ── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Friend Feed */}
+        {/* Friends (real data) */}
         <div className="rounded-2xl border border-white/8 bg-black/40 backdrop-blur-xl p-6">
           <h3 className="text-base font-black text-white flex items-center gap-2 mb-5">
-            <Users size={16} className="text-blue-400" /> Developer Feed
+            <Users size={16} className="text-blue-400" /> Your Friends
           </h3>
           <div ref={feedRef} className="space-y-3">
-            {FRIEND_FEED.map((item, i) => {
-              const colorCls: Record<string, string> = {
-                emerald: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
-                yellow: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400',
-                blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-                purple: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
-              };
-
-              return (
-                <motion.div
-                  key={i}
-                  whileHover={{ x: 4 }}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all cursor-pointer"
-                >
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center font-black text-xs ${colorCls[item.color]}`}>
-                    {item.name[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white font-semibold truncate">
-                      <span className="text-white/70">{item.name}</span>{' '}
-                      <span className={`${colorCls[item.color].split(' ')[2]}`}>{item.action}</span>{' '}
-                      <span className="text-white">"{item.target}"</span>
-                    </p>
-                  </div>
-                  <span className="text-[10px] text-white/30 flex-shrink-0">{item.time}</span>
-                </motion.div>
-              );
-            })}
+            {friends.length > 0 ? (
+              friends.slice(0, 5).map((f) => {
+                const hue = (f.name?.charCodeAt(0) ?? 65) * 7 % 360;
+                return (
+                  <Link key={f._id} to={`/profile/${f._id}`}>
+                    <motion.div
+                      whileHover={{ x: 4 }}
+                      className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-all cursor-pointer"
+                    >
+                      <div
+                        className="flex-shrink-0 w-8 h-8 rounded-full border border-white/10 flex items-center justify-center font-black text-xs text-white"
+                        style={{ backgroundColor: `hsl(${hue} 60% 35%)` }}
+                      >
+                        {f.name?.[0]?.toUpperCase() ?? '?'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white font-semibold truncate">{f.name}</p>
+                        <p className="text-[10px] text-white/40 uppercase tracking-widest">
+                          Level {f.level ?? 1} · {(f.points ?? 0).toLocaleString()} pts
+                        </p>
+                      </div>
+                      {(f.streak ?? 0) > 0 && (
+                        <span className="flex items-center gap-1 text-[11px] text-orange-400 font-bold flex-shrink-0">
+                          <Flame size={11} />{f.streak}
+                        </span>
+                      )}
+                    </motion.div>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="flex flex-col items-center text-center py-8 px-4">
+                <Users size={28} className="text-white/20 mb-3" />
+                <p className="text-sm text-white/60 font-semibold">No friends yet</p>
+                <p className="text-xs text-white/30 mt-1">Connect with other developers to see them here.</p>
+              </div>
+            )}
           </div>
           <Link to="/friends" className="mt-4 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-semibold transition-colors">
-            View all activity <ArrowRight size={12} />
+            {friends.length > 0 ? 'Manage friends' : 'Find developers'} <ArrowRight size={12} />
           </Link>
         </div>
 
@@ -599,24 +621,32 @@ const Dashboard: React.FC = () => {
             <Target size={16} className="text-emerald-400" /> Recommended for You
           </h3>
           <div className="space-y-3">
-            {RECOMMENDED.map((p, i) => (
-              <Link key={i} to="/test">
-                <motion.div
-                  whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.04)' }}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
-                >
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${DIFF_DOT[p.difficulty]}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors truncate">{p.title}</p>
-                    <p className="text-[10px] text-white/30 uppercase tracking-widest">{p.category}</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-yellow-400 font-bold flex-shrink-0">
-                    <Zap size={11} />+{p.xp}
-                  </div>
-                  <ChevronRight size={14} className="text-white/20 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all" />
-                </motion.div>
-              </Link>
-            ))}
+            {recommended.length > 0 ? (
+              recommended.map((p) => (
+                <Link key={p.id} to={`/tests/${p.id}`}>
+                  <motion.div
+                    whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.04)' }}
+                    className="flex items-center gap-3 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-all cursor-pointer group"
+                  >
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${DIFF_DOT[p.difficulty] ?? 'bg-zinc-500'}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors truncate">{p.title}</p>
+                      <p className="text-[10px] text-white/30 uppercase tracking-widest truncate">{p.category}</p>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-yellow-400 font-bold flex-shrink-0">
+                      <Zap size={11} />+{p.xp}
+                    </div>
+                    <ChevronRight size={14} className="text-white/20 group-hover:text-white/50 group-hover:translate-x-0.5 transition-all" />
+                  </motion.div>
+                </Link>
+              ))
+            ) : (
+              <div className="flex flex-col items-center text-center py-8 px-4">
+                <Target size={28} className="text-white/20 mb-3" />
+                <p className="text-sm text-white/60 font-semibold">You're all caught up</p>
+                <p className="text-xs text-white/30 mt-1">Solve more to unlock new challenges.</p>
+              </div>
+            )}
           </div>
           <Link to="/test" className="mt-4 flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-semibold transition-colors">
             See all problems <ArrowRight size={12} />

@@ -172,7 +172,10 @@ const Dashboard: React.FC = () => {
 
   // Calculate completed tests from dashboard data if available
   const solved = dbData?.tests?.filter((t: any) => t.completed).length ?? user?.solvedTests?.length ?? 0;
-  const rank = dbData?.rank ?? user?.rank ?? 999;
+  const rank = dbData?.rank ?? user?.rank ?? 'Novice';
+  // `rank` may be a numeric leaderboard position or a named tier (e.g. "Novice").
+  const rankIsNumeric = typeof rank === 'number' || /^\d+$/.test(String(rank));
+  const rankLabel = rankIsNumeric ? `Rank #${rank}` : String(rank);
 
   const heatmapData = useMemo(() => {
     const arr: number[] = [];
@@ -295,7 +298,7 @@ const Dashboard: React.FC = () => {
               )}
               <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/15 border border-primary/30 backdrop-blur-sm">
                 <Trophy size={13} className="text-primary" />
-                <span className="text-sm font-bold text-primary">Level {level} · Rank #{rank}</span>
+                <span className="text-sm font-bold text-primary">Level {level} · {rankLabel}</span>
               </div>
               <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 backdrop-blur-sm">
                 <CheckCircle2 size={13} className="text-emerald-400" />
@@ -372,7 +375,7 @@ const Dashboard: React.FC = () => {
           {[
             { label: 'Problems Solved', value: solved, icon: CheckCircle2, color: 'emerald', glow: 'shadow-emerald-500/20' },
             { label: 'Current Streak', value: streak, icon: Flame, color: 'orange', suffix: 'd', glow: 'shadow-orange-500/20' },
-            { label: 'Global Rank', value: rank, icon: Globe2, color: 'blue', prefix: '#', glow: 'shadow-blue-500/20' },
+            { label: 'Global Rank', value: rank, icon: Globe2, color: 'blue', prefix: rankIsNumeric ? '#' : '', glow: 'shadow-blue-500/20' },
             { label: 'Battles Won', value: (user as any)?.battlesWon ?? 0, icon: Swords, color: 'rose', glow: 'shadow-rose-500/20' },
             { label: 'Total XP', value: points, icon: Zap, color: 'yellow', glow: 'shadow-yellow-500/20' },
           ].map((stat, i) => {
@@ -396,7 +399,9 @@ const Dashboard: React.FC = () => {
                 </div>
                 <p className="text-xs font-semibold text-white/40 uppercase tracking-widest mb-1">{stat.label}</p>
                 <div className="text-3xl font-black text-white">
-                  {stat.prefix}<AnimatedCounter to={stat.value || 0} />{stat.suffix}
+                  {typeof stat.value === 'number'
+                    ? <>{stat.prefix}<AnimatedCounter to={stat.value || 0} />{stat.suffix}</>
+                    : <>{stat.prefix}{stat.value}{stat.suffix}</>}
                 </div>
               </motion.div>
             );

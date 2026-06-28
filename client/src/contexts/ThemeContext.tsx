@@ -10,7 +10,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const stored = localStorage.getItem('theme');
-    return (stored as 'light' | 'dark') || 'light';
+    if (stored === 'light' || stored === 'dark') return stored;
+    // The app's design language is dark-first (cyber / neon / glass), so default
+    // to dark when there's no saved choice. Users can toggle to light (persisted).
+    return 'dark';
   });
 
   useEffect(() => {

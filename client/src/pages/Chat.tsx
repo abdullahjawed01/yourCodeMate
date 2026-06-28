@@ -7,7 +7,8 @@ import { chatApi } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import { getSocket } from '@/utils/socket';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface Message {
@@ -170,30 +171,34 @@ const Chat: React.FC = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, []);
 
-    // Initialize socket
+    // Subscribe to the shared socket once; messages route by room id.
     useEffect(() => {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
-        const socket = io(API_URL);
+        const socket = getSocket();
         socketRef.current = socket;
 
-        socket.on('receive_message', (data: Message) => {
-            // Only add message if it belongs to current room
-            if (data.room === activeRoom.id) {
-                qc.setQueryData<Message[]>(['messages', activeRoom.id], prev => {
-                    const exists = prev?.some(m => (m._id || m.id) === (data._id || data.id));
-                    if (exists) return prev;
-                    return [...(prev || []), data];
-                });
-                scrollToBottom();
-            }
-        });
-
-        socket.emit('join_room', activeRoom.id);
-
-        return () => {
-            socket.disconnect();
+        const onReceive = (data: Message) => {
+            qc.setQueryData<Message[]>(['messages', data.room], prev => {
+                const exists = prev?.some(m => (m._id || m.id) === (data._id || data.id));
+                if (exists) return prev;
+                return [...(prev || []), data];
+            });
+            scrollToBottom();
         };
-    }, [activeRoom.id, qc, scrollToBottom]);
+
+        socket.on('receive_message', onReceive);
+        return () => {
+            socket.off('receive_message', onReceive);
+        };
+    }, [qc, scrollToBottom]);
+
+    // Join/leave the active room without tearing down the connection.
+    useEffect(() => {
+        const socket = getSocket();
+        socket.emit('join_room', activeRoom.id);
+        return () => {
+            socket.emit('leave_room', activeRoom.id);
+        };
+    }, [activeRoom.id]);
 
     // Fetch messages for active room
     const { data: messages = [], isLoading: loadingMessages } = useQuery<Message[]>({

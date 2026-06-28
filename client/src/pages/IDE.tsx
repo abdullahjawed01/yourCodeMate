@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Play, Loader2, Terminal, Code2, ChevronDown, Plus, Trash2, CheckCircle2, XCircle, Keyboard, BookOpen } from 'lucide-react';
 import { ideApi } from '@/services/api';
+import '@/lib/monacoSetup'; // self-host Monaco (no CDN dependency)
 import Editor from '@monaco-editor/react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';

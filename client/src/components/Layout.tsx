@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Code2, Terminal, User, LogOut,
   ChevronLeft, ChevronRight, Menu, GraduationCap, BrainCircuit,
   Trophy, MessageSquare, Swords, Star, Users,
-  Cpu, Globe2, Flame, Sparkles, BarChart3, ShieldCheck
+  Cpu, Globe2, Flame, Sparkles, BarChart3, ShieldCheck, Share2
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -24,6 +24,8 @@ interface SidebarItemProps {
 const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, path, active, collapsed, badge }) => (
   <Link
     to={path}
+    aria-label={label}
+    aria-current={active ? "page" : undefined}
     className={clsx(
       "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
       active
@@ -91,6 +93,9 @@ const Layout = () => {
 
   return (
     <div className="h-screen w-full bg-background flex relative overflow-hidden">
+      {/* Skip to content (keyboard / screen-reader accessibility) */}
+      <a href="#main-content" className="skip-link">Skip to content</a>
+
       {/* Ambient Background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className={clsx("absolute inset-0 bg-grid-pattern transition-opacity duration-500", theme === 'dark' ? "opacity-[0.05]" : "opacity-[0.02]")} />
@@ -105,6 +110,7 @@ const Layout = () => {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
+            aria-label="Close navigation menu"
           />
         )}
       </AnimatePresence>
@@ -149,6 +155,8 @@ const Layout = () => {
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
             className="hidden lg:flex w-6 h-6 items-center justify-center rounded-lg hover:bg-muted text-muted-foreground transition-colors ml-1"
           >
             {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -181,6 +189,7 @@ const Layout = () => {
 
           <SidebarSection label="AI Tools" collapsed={collapsed}>
             <SidebarItem icon={Terminal} label="IDE" path="/ide" active={isActive('/ide')} collapsed={collapsed} />
+            <SidebarItem icon={Share2} label="Collaborate" path="/collab" active={isActive('/collab')} collapsed={collapsed} />
             <SidebarItem icon={BrainCircuit} label="AI Interviewer" path="/interview" active={isActive('/interview')} collapsed={collapsed} />
             <SidebarItem icon={Sparkles} label="AI Mentor" path="/mentor" active={isActive('/mentor')} collapsed={collapsed} />
           </SidebarSection>
@@ -224,7 +233,7 @@ const Layout = () => {
             )}
             {!collapsed && (
               <div className="flex items-center gap-1 flex-shrink-0">
-                <button onClick={handleLogout} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
+                <button onClick={handleLogout} aria-label="Log out" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive transition-colors">
                   <LogOut size={14} />
                 </button>
               </div>
@@ -239,7 +248,7 @@ const Layout = () => {
         {/* Mobile Header */}
         <header className="lg:hidden h-14 border-b border-white/5 bg-black/40 backdrop-blur-xl flex items-center px-4 justify-between sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-3">
-            <button onClick={() => setMobileOpen(true)} className="p-2 -ml-1 rounded-xl hover:bg-muted text-zinc-400 hover:text-white transition-colors">
+            <button onClick={() => setMobileOpen(true)} aria-label="Open navigation menu" className="p-2 -ml-1 rounded-xl hover:bg-muted text-zinc-400 hover:text-white transition-colors">
               <Menu size={20} />
             </button>
             <div className="flex items-center gap-2">
@@ -287,7 +296,7 @@ const Layout = () => {
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-custom p-4 lg:p-6">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-custom p-4 lg:p-6 focus:outline-none">
           <div className="w-full h-full animate-in fade-in slide-in-from-bottom-2 duration-300">
             <Outlet />
           </div>

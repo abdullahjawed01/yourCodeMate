@@ -1,42 +1,48 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, ArrowLeft } from 'lucide-react';
+import { Home, ArrowLeft, Compass } from 'lucide-react';
 
 const NotFound: React.FC = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-950 p-4 relative overflow-hidden" style={{ top: 0, left: 0, margin: 0, minHeight: '100vh' }}>
+    <div className="min-h-[70vh] flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="hero-aurora absolute inset-0 opacity-40 pointer-events-none" />
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="text-center max-w-md"
+        className="text-center max-w-md relative"
       >
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: 'spring' }}
-          className="text-9xl font-bold text-primary-400/20 mb-4"
+          transition={{ delay: 0.15, type: 'spring' }}
+          className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 mb-6"
         >
-          404
+          <Compass className="w-10 h-10 text-primary" />
         </motion.div>
-        <h1 className="text-3xl font-bold text-white mb-4">Page Not Found</h1>
-        <p className="text-white/60 mb-8">
-          The page you're looking for doesn't exist or has been moved.
+
+        <div className="text-7xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent mb-3">
+          404
+        </div>
+        <h1 className="text-2xl font-bold text-foreground mb-3">Page not found</h1>
+        <p className="text-muted-foreground mb-8">
+          The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
-        <div className="flex items-center justify-center space-x-4">
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             to="/dashboard"
-            className="flex items-center space-x-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg transition-colors"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity"
           >
             <Home className="w-5 h-5" />
-            <span>Go Home</span>
+            <span>Go to dashboard</span>
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="flex items-center space-x-2 px-6 py-3 bg-white/5 text-white/70 rounded-lg hover:bg-white/10 transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-card border border-border text-foreground rounded-xl hover:bg-muted transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Go Back</span>
+            <span>Go back</span>
           </button>
         </div>
       </motion.div>
@@ -45,4 +51,3 @@ const NotFound: React.FC = () => {
 };
 
 export default NotFound;
-

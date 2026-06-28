@@ -99,6 +99,7 @@ if (process.env.NODE_ENV === "production") {
 
 import http from "http";
 import { Server } from "socket.io";
+import { YSocketIO } from "y-socket.io/dist/server";
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -108,18 +109,28 @@ const io = new Server(server, {
     }
 });
 
-// Socket logic
+// ── Yjs real-time collaboration ──
+// Attaches to the same Socket.IO server using dynamic `/yjs|<room>` namespaces,
+// so it is fully isolated from the default chat namespace below.
+const ySocketIO = new YSocketIO(io, { gcEnabled: true });
+ySocketIO.initialize();
+
+// ── Default namespace: chat / rooms ──
 io.on("connection", (socket) => {
     socket.on("join_room", (roomId) => {
-        socket.join(roomId);
+        if (roomId) socket.join(roomId);
+    });
+
+    socket.on("leave_room", (roomId) => {
+        if (roomId) socket.leave(roomId);
     });
 
     socket.on("send_message", (data) => {
-        io.to(data.room).emit("receive_message", data);
+        if (data?.room) io.to(data.room).emit("receive_message", data);
     });
 
     socket.on("disconnect", () => {
-        // Handle disconnect
+        // Socket.IO auto-leaves all rooms on disconnect.
     });
 });
 

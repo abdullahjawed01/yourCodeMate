@@ -264,6 +264,9 @@ const Profile: React.FC = () => {
     const streak = displayUser.streak ?? 7;
     const points = displayUser.points ?? 1280;
     const rank = displayUser.rank ?? 247;
+    // rank may be a numeric leaderboard position or a named tier (e.g. "Gold").
+    const rankIsNumeric = typeof rank === 'number' || /^\d+$/.test(String(rank));
+    const rankLabel = rankIsNumeric ? `#${rank}` : String(rank);
     const accuracy = displayUser.accuracy ?? 78;
     const langStats: Record<string, number> = displayUser.languageStats ?? { Python: 18, JavaScript: 12, 'C++': 6, Java: 5, TypeScript: 3 };
     const totalLang = Object.values(langStats).reduce((a, b) => a + b, 0) || 1;
@@ -339,7 +342,7 @@ const Profile: React.FC = () => {
                     </div>
                     {/* Stats row */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <StatCard label="Global Rank" value={`#${rank}`} variant="gold" icon={<Trophy size={15} className="text-yellow-500" />} animated={false} />
+                        <StatCard label="Global Rank" value={rankLabel} variant="gold" icon={<Trophy size={15} className="text-yellow-500" />} animated={false} />
                         <StatCard label="Problems Solved" value={MOCK_SOLVED.length} variant="accent" icon={<CheckCircle2 size={15} className="text-emerald-500" />} animated={false} />
                         <StatCard label="Accuracy" value={`${accuracy}%`} icon={<Target size={15} className="text-purple-500" />} animated={false} />
                         <StatCard label="Total XP" value={points.toLocaleString()} variant="primary" icon={<Zap size={15} className="text-primary" />} animated={false} />
@@ -404,7 +407,7 @@ const Profile: React.FC = () => {
                                 <Trophy size={18} className="text-yellow-500" /> Competitive Rank
                             </h3>
                             <div className="relative z-10 mt-2">
-                                <p className="text-6xl font-black gradient-text-gold tracking-tighter drop-shadow-md">#{rank}</p>
+                                <p className="text-6xl font-black gradient-text-gold tracking-tighter drop-shadow-md">{rankLabel}</p>
                                 <p className="text-xs text-yellow-500/70 mt-1 uppercase tracking-widest font-bold">Global Leaderboard</p>
                             </div>
                             <div className="space-y-2.5 text-sm mt-4 relative z-10 bg-black/40 p-3 rounded-xl border border-white/5">

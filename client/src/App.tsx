@@ -30,6 +30,8 @@ const Achievements = lazy(() => import('@/pages/Achievements'));
 const Community = lazy(() => import('@/pages/Community'));
 const Contests = lazy(() => import('@/pages/Contests'));
 const AlgorithmVisualizer = lazy(() => import('@/pages/AlgorithmVisualizer'));
+const Collaborate = lazy(() => import('@/pages/Collaborate'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
 
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -71,6 +73,8 @@ function App() {
 
             {/* AI Tools */}
             <Route path="/ide" element={<ProtectedRoute><PageTransition><IDE /></PageTransition></ProtectedRoute>} />
+            <Route path="/collab" element={<ProtectedRoute><PageTransition><Collaborate /></PageTransition></ProtectedRoute>} />
+            <Route path="/collab/:roomId" element={<ProtectedRoute><Collaborate /></ProtectedRoute>} />
             <Route path="/mentor" element={<ProtectedRoute><PageTransition><AIMentor /></PageTransition></ProtectedRoute>} />
             <Route path="/interview" element={<ProtectedRoute><PageTransition><Interview /></PageTransition></ProtectedRoute>} />
 
@@ -86,9 +90,12 @@ function App() {
 
             {/* Misc */}
             <Route path="/routes" element={<PageTransition><RouteList /></PageTransition>} />
+
+            {/* 404 inside the app shell, so navigation stays available */}
+            <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </ErrorBoundary>

@@ -10,7 +10,23 @@ import { io, Socket } from 'socket.io-client';
  * namespaces via SocketIOProvider, so it is intentionally separate.)
  */
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+/**
+ * Socket.IO / Yjs connect to the server ORIGIN, not the REST base path.
+ * `VITE_API_URL` includes the `/api` prefix (e.g. http://localhost:8080/api),
+ * which is correct for REST but wrong for sockets — `${url}/yjs|room` must
+ * resolve to `/yjs|room`, not `/api/yjs|room`. This strips any path and returns
+ * just the origin, falling back to the current page origin in production.
+ */
+export function getServerOrigin(): string {
+  const raw = import.meta.env.VITE_API_URL || '';
+  try {
+    return new URL(raw, window.location.origin).origin;
+  } catch {
+    return window.location.origin;
+  }
+}
+
+const API_URL = getServerOrigin();
 
 let socket: Socket | null = null;
 

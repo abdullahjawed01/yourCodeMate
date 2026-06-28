@@ -16,8 +16,9 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { ideApi } from '@/services/api';
 import { YjsMonacoBinding } from '@/lib/yjsMonacoBinding';
 import { generateRoomId, makeIdentity, type CollabUser } from '@/lib/collab';
+import { getServerOrigin } from '@/utils/socket';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_URL = getServerOrigin();
 
 const LANGUAGES: { key: string; label: string; monaco: string; starter: string }[] = [
   { key: 'javascript', label: 'JavaScript', monaco: 'javascript', starter: '// Collaborate in real time!\nconsole.log("Hello, team 👋");\n' },

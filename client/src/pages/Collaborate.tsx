@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import '@/lib/monacoSetup'; // self-host Monaco (no CDN dependency)
 import Editor, { OnMount } from '@monaco-editor/react';
 import { SocketIOProvider } from 'y-socket.io';
 import * as Y from 'yjs';

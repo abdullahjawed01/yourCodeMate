@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Code2, Terminal, User, LogOut,
   ChevronLeft, ChevronRight, Menu, GraduationCap, BrainCircuit,
   Trophy, MessageSquare, Swords, Star, Users,
-  Cpu, Globe2, Flame, Sparkles, BarChart3, ShieldCheck
+  Cpu, Globe2, Flame, Sparkles, BarChart3, ShieldCheck, Share2
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
@@ -181,6 +181,7 @@ const Layout = () => {
 
           <SidebarSection label="AI Tools" collapsed={collapsed}>
             <SidebarItem icon={Terminal} label="IDE" path="/ide" active={isActive('/ide')} collapsed={collapsed} />
+            <SidebarItem icon={Share2} label="Collaborate" path="/collab" active={isActive('/collab')} collapsed={collapsed} />
             <SidebarItem icon={BrainCircuit} label="AI Interviewer" path="/interview" active={isActive('/interview')} collapsed={collapsed} />
             <SidebarItem icon={Sparkles} label="AI Mentor" path="/mentor" active={isActive('/mentor')} collapsed={collapsed} />
           </SidebarSection>

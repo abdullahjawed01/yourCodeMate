@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { authApi } from '@/services/api';
 import type { User } from '@/types';
 import toast from 'react-hot-toast';
+import { disconnectSocket } from '@/utils/socket';
 
 interface AuthContextType {
   user: User | null;
@@ -74,6 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setToken(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    disconnectSocket();
     toast.success('Logged out successfully');
   };
 

@@ -30,6 +30,7 @@ const Achievements = lazy(() => import('@/pages/Achievements'));
 const Community = lazy(() => import('@/pages/Community'));
 const Contests = lazy(() => import('@/pages/Contests'));
 const AlgorithmVisualizer = lazy(() => import('@/pages/AlgorithmVisualizer'));
+const Collaborate = lazy(() => import('@/pages/Collaborate'));
 
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -71,6 +72,8 @@ function App() {
 
             {/* AI Tools */}
             <Route path="/ide" element={<ProtectedRoute><PageTransition><IDE /></PageTransition></ProtectedRoute>} />
+            <Route path="/collab" element={<ProtectedRoute><PageTransition><Collaborate /></PageTransition></ProtectedRoute>} />
+            <Route path="/collab/:roomId" element={<ProtectedRoute><Collaborate /></ProtectedRoute>} />
             <Route path="/mentor" element={<ProtectedRoute><PageTransition><AIMentor /></PageTransition></ProtectedRoute>} />
             <Route path="/interview" element={<ProtectedRoute><PageTransition><Interview /></PageTransition></ProtectedRoute>} />
 

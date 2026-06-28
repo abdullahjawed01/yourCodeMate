@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import * as THREE from 'three';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '@/services/api';
@@ -87,117 +86,20 @@ const DIFF_DOT: Record<string, string> = {
   hard: 'bg-rose-500',
 };
 
-// ─── Three.js Hero Canvas ─────────────────────────────────────────────────────
+// ─── Lightweight CSS Hero Backdrop ─────────────────────────────────────────────
+// GPU-cheap animated backdrop (no WebGL / Three.js). Renders an aurora gradient,
+// a subtle grid, and a few drifting orbs — a fraction of the cost of a WebGL scene.
 
-const ThreeHero: React.FC = () => {
-  const mountRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    let W = mountRef.current.clientWidth;
-    let H = mountRef.current.clientHeight;
-
-    // Safety check for dimensions
-    if (W <= 0) W = 800;
-    if (H <= 0) H = 600;
-
-    let renderer: THREE.WebGLRenderer;
-    let animId: number;
-
-    try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setSize(W, H);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      mountRef.current.appendChild(renderer.domElement);
-
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(60, W / H, 0.1, 1000);
-      camera.position.set(0, 0, 8);
-
-      // Particles
-      const particleGeo = new THREE.BufferGeometry();
-      const count = 180;
-      const positions = new Float32Array(count * 3);
-      for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 20;
-      particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      const particleMat = new THREE.PointsMaterial({ color: 0x6366f1, size: 0.06, transparent: true, opacity: 0.7 });
-      const particles = new THREE.Points(particleGeo, particleMat);
-      scene.add(particles);
-
-      // Floating wireframe cubes
-      const cubes: THREE.Mesh[] = [];
-      const cubeMat = new THREE.MeshBasicMaterial({ color: 0x4f46e5, wireframe: true, transparent: true, opacity: 0.25 });
-      for (let i = 0; i < 6; i++) {
-        const size = 0.3 + Math.random() * 0.5;
-        const geo = new THREE.BoxGeometry(size, size, size);
-        const cube = new THREE.Mesh(geo, cubeMat.clone());
-        cube.position.set((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 4);
-        cube.userData = { rx: (Math.random() - 0.5) * 0.015, ry: (Math.random() - 0.5) * 0.015, floatSpeed: 0.001 + Math.random() * 0.003, floatOffset: Math.random() * Math.PI * 2 };
-        scene.add(cube);
-        cubes.push(cube);
-      }
-
-      // Glow torus
-      const torusGeo = new THREE.TorusGeometry(2.5, 0.015, 16, 100);
-      const torusMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.15 });
-      const torus = new THREE.Mesh(torusGeo, torusMat);
-      torus.rotation.x = Math.PI / 2.5;
-      scene.add(torus);
-
-      let frame = 0;
-      const mouse = { x: 0, y: 0 };
-      const onMouse = (e: MouseEvent) => {
-        if (!W || !H) return;
-        mouse.x = (e.clientX / W - 0.5) * 0.5;
-        mouse.y = -(e.clientY / H - 0.5) * 0.5;
-      };
-      window.addEventListener('mousemove', onMouse);
-
-      const animateLoop = () => {
-        animId = requestAnimationFrame(animateLoop);
-        frame++;
-        particles.rotation.y += 0.0003;
-        particles.rotation.x += 0.0001;
-        torus.rotation.z += 0.001;
-        camera.position.x += (mouse.x - camera.position.x) * 0.04;
-        camera.position.y += (mouse.y - camera.position.y) * 0.04;
-        cubes.forEach(c => {
-          c.rotation.x += c.userData.rx;
-          c.rotation.y += c.userData.ry;
-          c.position.y += Math.sin(frame * c.userData.floatSpeed + c.userData.floatOffset) * 0.003;
-        });
-        renderer.render(scene, camera);
-      };
-      animateLoop();
-
-      const onResize = () => {
-        if (!mountRef.current) return;
-        W = mountRef.current.clientWidth;
-        H = mountRef.current.clientHeight;
-        if (W <= 0 || H <= 0) return;
-        camera.aspect = W / H;
-        camera.updateProjectionMatrix();
-        renderer.setSize(W, H);
-      };
-      window.addEventListener('resize', onResize);
-
-      return () => {
-        cancelAnimationFrame(animId);
-        window.removeEventListener('mousemove', onMouse);
-        window.removeEventListener('resize', onResize);
-        renderer?.dispose();
-        if (mountRef.current?.contains(renderer?.domElement)) {
-          mountRef.current.removeChild(renderer.domElement);
-        }
-      };
-    } catch (err) {
-      console.error("ThreeHero init error:", err);
-    }
-  }, []);
-
-  return <div ref={mountRef} className="absolute inset-0 w-full h-full" />;
-};
+const HeroBackdrop: React.FC = React.memo(() => (
+  <div className="absolute inset-0 w-full h-full overflow-hidden">
+    <div className="hero-aurora absolute inset-0" />
+    <div className="absolute inset-0 bg-grid-pattern opacity-[0.06]" />
+    <div className="absolute -top-1/4 -left-1/4 w-[60%] h-[60%] rounded-full bg-primary/20 blur-[120px] animate-float" />
+    <div className="absolute -bottom-1/4 -right-1/4 w-[55%] h-[55%] rounded-full bg-accent/15 blur-[120px] animate-float-slow" />
+    <div className="absolute top-1/3 right-1/4 w-[30%] h-[30%] rounded-full bg-purple-500/10 blur-[100px] animate-pulse-slow" />
+  </div>
+));
+HeroBackdrop.displayName = 'HeroBackdrop';
 
 // ─── Animated Counter ─────────────────────────────────────────────────────────
 
@@ -352,9 +254,9 @@ const Dashboard: React.FC = () => {
 
       {/* ── HERO SECTION ── */}
       <div className="relative min-h-[560px] flex items-center rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_120px_rgba(99,102,241,0.12)]">
-        {/* Three.js Background */}
+        {/* Animated CSS Background */}
         <div className="absolute inset-0 z-0">
-          <ThreeHero />
+          <HeroBackdrop />
         </div>
 
         {/* Gradient overlays */}

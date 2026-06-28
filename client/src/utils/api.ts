@@ -41,7 +41,12 @@ api.interceptors.response.use(
       // Only auto-redirect if this is a critical auth failure (not a background call)
       if (!config?.silentFail) {
         const url = config?.url || '';
-        const isCritical = url.includes('/me') || url.includes('/auth');
+        // Only the auth identity calls are "critical" enough to force a logout +
+        // redirect. Match them precisely — a broad `includes('/me')` also caught
+        // endpoints like `/leaderboard/me`, causing spurious logouts when an
+        // unrelated route returned 401.
+        const path = url.split('?')[0];
+        const isCritical = path === '/me' || path.endsWith('/auth/me') || path.startsWith('/auth');
         if (isCritical) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');

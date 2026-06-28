@@ -50,7 +50,14 @@ The standard layering is **route → controller → Mongoose model**:
 - `middleware/authMiddleware.js` — `protect` (verifies `Bearer` JWT, loads `req.user` minus password) and `adminOnly` (checks `req.user.isAdmin`). Protected/admin routes apply these in the route file.
 - `utils/` — cross-cutting helpers: `dbConnect.js` (auto-connects on import as a side-effect — note it is imported for effect in `app.js`, not called), `groqClient.js` (shared Groq SDK singleton), `sendEmail.js`, `sendSMS.js`
 
-`app.js` also starts an HTTP server wrapping Express and attaches **Socket.IO** for realtime chat/rooms (`join_room` / `send_message` / `receive_message`). In `NODE_ENV=production` the server additionally serves the built client from `../client/dist` and SPA-falls-back to `index.html` for non-`/api`, non-`/socket.io` paths.
+`app.js` also starts an HTTP server wrapping Express and attaches **Socket.IO** for realtime chat/rooms (`join_room` / `leave_room` / `send_message` / `receive_message`) on the **default namespace**. In `NODE_ENV=production` the server additionally serves the built client from `../client/dist` and SPA-falls-back to `index.html` for non-`/api`, non-`/socket.io` paths.
+
+### Realtime collaboration (Yjs)
+`app.js` attaches **`y-socket.io`** (`new YSocketIO(io).initialize()`) to the same Socket.IO server. It serves Yjs CRDT documents over **dynamic `/yjs|<room>` namespaces**, fully isolated from the default chat namespace. The client `Collaborate` page (`/collab`, `/collab/:roomId`) uses `SocketIOProvider` + a custom, fully-typed `YjsMonacoBinding` (`client/src/lib/yjsMonacoBinding.ts`) that binds a shared `Y.Text` to the app's existing Monaco instance (from `@monaco-editor/react`'s `onMount`) — no second Monaco copy, no CDN dependency. Awareness carries presence (`user`) and JSON-safe cursor offsets.
+
+**Socket URL gotcha:** `VITE_API_URL` includes the `/api` REST prefix, but Socket.IO/Yjs must connect to the **origin** (no path), or namespaces resolve to `/api/...` and never match. Always derive it via `getServerOrigin()` in `client/src/utils/socket.ts`; the shared reconnecting socket singleton lives there too (`getSocket()` / `disconnectSocket()`).
+
+`utils/dbConnect.js` retries with exponential backoff and does **not** kill the process on a DB error (only on a missing `DBURI`), so realtime features survive a transient DB/Atlas-whitelist outage.
 
 ### AI features
 AI is powered by **Groq** (not OpenAI, despite both SDKs being in dependencies). All AI controllers import the shared client from `utils/groqClient.js`. Models in use: `llama-3.1-8b-instant` (fast paths) and `llama-3.3-70b-versatile` (evaluation/quality paths). AI surfaces live in `aiMentorController`, `aiController`, `hintController`, `interviewController`.
